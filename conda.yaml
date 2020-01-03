@@ -8,3 +8,5 @@ dependencies:
   - dill
   - pymongo
   - requests
+  -pip:
+    - timeloop
