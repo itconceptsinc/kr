@@ -1,3 +1,8 @@
+# Configuration Files
 .vscode
 *config.py
 *__pycache__*
+
+# Tmp files for debugging
+error.txt
+test.txt
