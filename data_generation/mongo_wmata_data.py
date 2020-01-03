@@ -1,14 +1,21 @@
-import requests, json, time
+import sys, requests, json, time
+
+sys.path.insert(0, '..')
 
 import numpy as np
 
 from data_generation.mongo_conn import get_connection
-from datetime import datetime
-from config import WMATA
+from datetime import datetime, timedelta
+from timeloop import Timeloop
+from pytz import timezone
 from time import sleep
+
+from config import WMATA
 
 headers = {'api_key': WMATA['api_key']}
 sesh = requests.Session()
+t1 = Timeloop()
+TIME_TO_WAIT = 5 * 60
 
 
 def get_line_codes():
@@ -78,6 +85,23 @@ def get_station_codes():
 
     return stations
 
+@t1.job(interval=timedelta(seconds=TIME_TO_WAIT))
+def get_train_data():
+    try:
+        get_train_incidents()
+        get_train_positions()
+        get_elevator_incidents()
+
+        for ix, station in enumerate(stations):
+            get_train_arrivals(station['Code'])
+            if ix % 7 == 0:
+                time.sleep(1)
+
+    except Exception as err:
+        with open('error.txt', 'a') as txt_file:
+            txt_file.write(f'{err}\n')
+
+
 if __name__ == "__main__":
     client = get_connection()
     db = client['wmata']
@@ -88,18 +112,4 @@ if __name__ == "__main__":
 
     stations = get_station_codes()
 
-    while True:
-        try:
-            get_train_incidents()
-            get_train_positions()
-            get_elevator_incidents()
-
-            for ix, station in enumerate(stations):
-                get_train_arrivals(station['Code'])
-                if ix % 7 == 0:
-                    time.sleep(1)
-
-            time.sleep(45)
-        except:
-            time.sleep(60)
-
+    t1.start(block=True)
