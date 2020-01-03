@@ -4,7 +4,7 @@ sys.path.insert(0, '..')
 
 import numpy as np
 
-from data_generation.mongo_conn import get_connection
+from utils.mongo_conn import get_connection
 from datetime import datetime, timedelta
 from timeloop import Timeloop
 from pytz import timezone
