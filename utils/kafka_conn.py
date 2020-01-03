@@ -4,8 +4,8 @@ from config import KAFKA
 
 def connect_kafka_producer():
     # Setup connection configs
-    host = KAFKA['host']
-    port = KAFKA['kafka_broker_port']
+    host = KAFKA['kafka_host']
+    broker_port = KAFKA['kafka_broker_port']
 
     # Attempt to create connection to producer
     _producer = None
