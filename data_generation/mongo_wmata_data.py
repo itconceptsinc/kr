@@ -4,7 +4,7 @@ sys.path.insert(0, '..')
 
 import numpy as np
 
-from utils.mongo_conn import get_connection
+from utils.mongo_conn import get_mongo_db
 from datetime import datetime, timedelta
 from timeloop import Timeloop
 from pytz import timezone
@@ -26,7 +26,7 @@ def get_line_codes():
 
     return line_codes
 
-def get_elevator_incidents():
+def save_elevator_incidents():
     url = 'https://api.wmata.com/Incidents.svc/json/ElevatorIncidents'
     req = sesh.get(url, headers=headers)
     data = {
@@ -36,7 +36,7 @@ def get_elevator_incidents():
     elevator_incidents_db.insert_one(data)
 
 
-def get_train_incidents():
+def save_train_incidents():
     url = 'https://api.wmata.com/Incidents.svc/json/Incidents'
     req = sesh.get(url, headers=headers)
     data = {
@@ -46,7 +46,7 @@ def get_train_incidents():
     train_incidents_db.insert_one(data)
 
 
-def get_train_positions():
+def save_train_positions():
     url = 'https://api.wmata.com/TrainPositions/TrainPositions?contentType=json'
     req = sesh.get(url, headers=headers)
     data = {
@@ -56,14 +56,17 @@ def get_train_positions():
     train_position_db.insert_one(data)
 
 
+def save_train_arrivals(train_arrivals):
+    data = {
+        'epoch_time': datetime.utcnow().timestamp(),
+        'data': {'Trains': train_arrivals}
+    }
+    train_arrivals_db.insert_one(data)
+
 def get_train_arrivals(station_code):
     train_arrival_url = f'https://api.wmata.com/StationPrediction.svc/json/GetPrediction/{station_code}'
     req = sesh.get(train_arrival_url, headers=headers)
-    data = {
-        'epoch_time': datetime.utcnow().timestamp(),
-        'data': req.json()
-    }
-    train_arrivals_db.insert_one(data)
+    return req.json().get('Trains', [])
 
 
 def get_station_codes():
@@ -88,14 +91,17 @@ def get_station_codes():
 @t1.job(interval=timedelta(seconds=TIME_TO_WAIT))
 def get_train_data():
     try:
-        get_train_incidents()
-        get_train_positions()
-        get_elevator_incidents()
+        save_train_incidents()
+        save_train_positions()
+        save_elevator_incidents()
 
+        train_arrivals = []
         for ix, station in enumerate(stations):
-            get_train_arrivals(station['Code'])
+            train_arrivals.extend(get_train_arrivals(station['Code']))
             if ix % 7 == 0:
                 time.sleep(1)
+        save_train_arrivals(train_arrivals)
+
 
     except Exception as err:
         with open('error.txt', 'a') as txt_file:
@@ -103,8 +109,7 @@ def get_train_data():
 
 
 if __name__ == "__main__":
-    client = get_connection()
-    db = client['wmata']
+    db = get_mongo_db()
     train_position_db = db.train_positions
     train_arrivals_db = db.train_arrivals
     train_incidents_db = db.train_incidents
