@@ -1,0 +1,10 @@
+name: kessel_run
+
+dependencies:
+  - python=3.7
+  - numpy
+  - pandas
+  - matplotlib
+  - dill
+  - pymongo
+  - requests
