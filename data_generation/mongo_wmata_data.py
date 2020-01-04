@@ -2,13 +2,9 @@ import sys, requests, json, time
 
 sys.path.insert(0, '..')
 
-import numpy as np
-
 from utils.mongo_conn import get_mongo_db
 from datetime import datetime, timedelta
 from timeloop import Timeloop
-from pytz import timezone
-from time import sleep
 
 from config import WMATA
 
