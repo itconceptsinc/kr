@@ -1,9 +1,11 @@
 import sys, requests, json, time, os
 
-fileDir = os.path.dirname(os.path.abspath(__file__))
-parentDir = os.path.dirname(fileDir)
-sys.path.insert(0, parentDir)
-
+try:
+    fileDir = os.path.dirname(os.path.abspath(__file__))
+    parentDir = os.path.dirname(fileDir)
+    sys.path.insert(0, parentDir)
+except:
+    pass
 
 from utils.mongo_conn import get_mongo_db
 from datetime import datetime, timedelta
