@@ -1,6 +1,9 @@
-import sys, requests, json, time
+import sys, requests, json, time, os
 
-sys.path.insert(0, '..')
+fileDir = os.path.dirname(os.path.abspath(__file__))
+parentDir = os.path.dirname(fileDir)
+sys.path.insert(0, parentDir)
+
 
 from utils.mongo_conn import get_mongo_db
 from datetime import datetime, timedelta

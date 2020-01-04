@@ -1,3 +1,6 @@
+import json
+
+import numpy as np
 from datetime import timedelta
 from timeloop import Timeloop
 
@@ -22,36 +25,35 @@ class CustomProducer():
     def get_record(self):
         """Gets the next mongo document for the stream"""
         doc = self.mongo_coll.find_one(
-                {"epoch_time": {"$gt": self.curr_datetime}},
-                {"epoch_time": -1}
-            )
+            {"epoch_time": {"$gt": self.curr_datetime}},
+            sort=[('epoch_time', 1)]
+        )
         return doc
     
     def process_data(self, data):
         """Converts the document to a kafka message"""
-        results = modifier(data)
+        results = self.modifier(data)
         return results
 
-    def advance_stream(self, doc, seconds=None):
+    def advance_stream(self, doc=None, seconds=None):
         """Advance the datetime of the stream"""
         if seconds:
-            new_datetime = np.ceil(doc['epoch_time']) + seconds
-            self.curr_datetime = new_datetime
-        else:
+            self.curr_datetime += seconds
+        elif doc:
             self.curr_datetime = np.ceil(doc['epoch_time'])
 
-    def publish_msg(self, value, key=None):
+    def publish_msg(self, value, key=''):
         try:
             key_bytes = bytes(key, encoding='utf-8')
-            value_bytes = bytes(value, encoding='utf-8')
-            producer_instance.send(topic_name, key=key_bytes, value=value_bytes)
-            producer_instance.flush()
+            value_bytes = bytes(json.dumps(value), encoding='utf-8')
+            self.producer.send(self.topic, key=key_bytes, value=value_bytes)
+            self.producer.flush()
         except Exception as ex:
             print('Exception in publishing message')
 
     def produce(self):
         doc = self.get_record()
-        self.advance_stream()
+        self.advance_stream(doc)
         msg = self.process_data(doc['data'])
         self.publish_msg(msg)
 
