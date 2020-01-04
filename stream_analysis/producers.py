@@ -9,6 +9,8 @@ except NameError:
 
 from stream_analysis.generic_producer import CustomProducer
 
+TIME_TO_WAIT = 5 * 60
+
 def train_pos_func(data):
     msg = []
 
@@ -31,5 +33,5 @@ train_position_producer = CustomProducer(
 )
 
 while True:
-    train_position_producer.produce()
-    time.sleep(60)
+    train_position_producer.produce(200)
+    time.sleep(TIME_TO_WAIT)

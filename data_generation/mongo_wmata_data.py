@@ -1,5 +1,7 @@
 import sys, requests, json, time, os
 
+
+
 try:
     fileDir = os.path.dirname(os.path.abspath(__file__))
     parentDir = os.path.dirname(fileDir)
@@ -27,6 +29,13 @@ def get_line_codes():
 
     return line_codes
 
+def get_circuit_ids():
+    url = 'https://api.wmata.com/TrainPositions/TrackCircuits?contentType=json'
+    req = sesh.get(url, headers=headers)
+
+    return req.json()
+
+# TODO: Cleanup all these effectively duplicate functions
 def save_elevator_incidents():
     url = 'https://api.wmata.com/Incidents.svc/json/ElevatorIncidents'
     req = sesh.get(url, headers=headers)
@@ -55,6 +64,16 @@ def save_train_positions():
         'data': req.json()
     }
     train_position_db.insert_one(data)
+
+# TODO: Figure out implementation
+def save_train_positions_gtfs():
+    url = 'https://api.wmata.com/gtfs/rail-gtfsrt-vehiclepositions.pb'
+    req = sesh.get(url, headers=headers)
+    data = {
+        'epoch_time': datetime.utcnow().timestamp(),
+        'data': req.content
+    }
+    train_positions_gtfs.insert_one(data)
 
 
 def save_train_arrivals(train_arrivals):
@@ -94,6 +113,7 @@ def get_train_data():
     try:
         save_train_incidents()
         save_train_positions()
+        save_train_positions_gtfs()
         save_elevator_incidents()
 
         train_arrivals = []
@@ -115,6 +135,7 @@ if __name__ == "__main__":
     train_arrivals_db = db.train_arrivals
     train_incidents_db = db.train_incidents
     elevator_incidents_db = db.elevator_incidents
+    train_positions_gtfs = db.train_positions_gtfs
 
     stations = get_station_codes()
 
