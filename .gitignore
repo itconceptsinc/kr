@@ -1,6 +1,7 @@
 # Configuration Files
 .vscode
 *config.py
+.idea
 *__pycache__*
 
 # Tmp files for debugging
