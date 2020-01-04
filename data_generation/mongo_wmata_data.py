@@ -33,7 +33,7 @@ def get_circuit_ids():
     url = 'https://api.wmata.com/TrainPositions/TrackCircuits?contentType=json'
     req = sesh.get(url, headers=headers)
 
-    return req.json()
+    return req.json().get('TrackCircuits', [])
 
 # TODO: Cleanup all these effectively duplicate functions
 def save_elevator_incidents():
