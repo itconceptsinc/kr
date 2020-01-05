@@ -1,9 +1,18 @@
+import sys, os
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
 
 from dash.dependencies import Output, Input
+
+try:
+    fileDir = os.path.dirname(os.path.abspath(__file__))
+    parentDir = os.path.dirname(fileDir)
+    sys.path.insert(0, parentDir)
+except:
+    pass
 
 from config import DEBUG
 from utils.wmata_static import get_circuit_ids
