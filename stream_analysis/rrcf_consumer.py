@@ -8,9 +8,8 @@ class RRCFConsumer():
 
         # Setup forest params
         self.forest = None
-        self.num_trees = 40
-        self.shingle_size = 4
-        self.tree_size = 256
+        self.num_trees = 20
+        self.tree_size = 128
         self.ix = 0
 
         self.generate_forest()
