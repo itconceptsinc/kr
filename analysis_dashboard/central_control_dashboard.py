@@ -14,10 +14,18 @@ line_colors = {'BL': 'blue', 'GR': 'green', 'OR': 'orange', 'RD': 'red', 'SV': '
 train_pos_rrcf = TrainPosRRCF()
 
 if DEBUG:
-    train_pos_rrcf.process_msgs(350)
+    train_pos_rrcf.process_msgs(150)
 
 columns = ['cars', 'direction', 'circuit', 'seconds_at_loc', 'anomaly_score']
 tbl_cols = [{"name": i, "id": i} for i in columns]
+
+styles = [{
+    'if': {
+        'column_id': 'anomaly_score',
+        'filter_query': '{anomaly_score} > 50'
+    },
+    'color': 'red',
+}]
 
 
 app = dash.Dash(__name__)
@@ -41,7 +49,8 @@ app.layout = html.Div(id='table-wrapper',
                                                selected_rows=[],
                                                page_action="native",
                                                page_current=0,
-                                               page_size=15
+                                               page_size=15,
+                                               style_data_conditional=styles,
                                                ),
                           dcc.Interval(
                               id='graph-update',

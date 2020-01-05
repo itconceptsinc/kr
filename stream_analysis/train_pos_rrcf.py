@@ -57,7 +57,8 @@ class TrainPosRRCF():
         scores = {}
         for circuit_id in self.circuit_ids:
             ix = self.forests[circuit_id].ix
-            if ix > 0:
+            # TODO: Investigate if this makes sense
+            if ix > 100:
                 scores[circuit_id] = self.forests[circuit_id].metrics[ix-1]
 
         return scores
