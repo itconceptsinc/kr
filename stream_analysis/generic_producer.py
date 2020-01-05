@@ -55,8 +55,9 @@ class CustomProducer():
         for _ in range(itr):
             doc = self.get_record()
             self.advance_stream(doc)
-            msg = self.process_data(doc['data'])
-            self.publish_msg(msg)
+            if doc and doc.get('data'):
+                msg = self.process_data(doc['data'])
+                self.publish_msg(msg)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,9 @@
 import sys, requests, json, time, os
 
+from google.protobuf import json_format
+from pandas.io.json import json_normalize
+from google.transit import gtfs_realtime_pb2
+
 try:
     fileDir = os.path.dirname(os.path.abspath(__file__))
     parentDir = os.path.dirname(fileDir)
@@ -7,9 +11,8 @@ try:
 except NameError:
     pass
 
+from config import DEBUG
 from stream_analysis.generic_producer import CustomProducer
-
-TIME_TO_WAIT = 5 * 60
 
 def train_pos_func(data):
     msg = []
@@ -25,13 +28,36 @@ def train_pos_func(data):
         msg.append(pos_data)
     return msg
 
-train_position_producer = CustomProducer(
-    'train_positions',
-    1578035626,
-    train_pos_func,
-    'train_positions',
-)
+def train_gtfs_func(data):
+    feed = gtfs_realtime_pb2.FeedMessage()
+    feed.ParseFromString(data)
+    decoded_data = json.loads(json_format.MessageToJson(feed))
+    return decoded_data
 
-while True:
-    train_position_producer.produce(200)
-    time.sleep(TIME_TO_WAIT)
+
+if __name__ == "__main__":
+    TIME_TO_WAIT = 5 * 60
+    train_position_producer = CustomProducer(
+        'train_positions',
+        1578035626,
+        train_pos_func,
+        'train_positions'
+    )
+
+    train_gtfs_producer = CustomProducer(
+        'train_gtfs',
+        1578166880,
+        train_gtfs_func,
+        'train_positions_gtfs'
+    )
+
+    producers = [train_position_producer, train_gtfs_producer]
+
+    if DEBUG:
+        train_gtfs_producer.produce(2)
+        [x.produce(250) for x in producers]
+        sys.exit()
+
+    while True:
+        [x.produce(1) for x in producers]
+        time.sleep(TIME_TO_WAIT)
