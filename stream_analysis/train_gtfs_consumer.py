@@ -20,7 +20,10 @@ class TrainGTFS():
     def __init__(self, topic='train_positions'):
         topic = 'train_gtfs'
         self.consumer = connect_kafka_consumer(topic)
-        self.stop_times = pd.read_csv('../static/stop_times.txt')
+        try:
+            self.stop_times = pd.read_csv('../static/stop_times.txt')
+        except:
+            self.stop_times = pd.read_csv('static/stop_times.txt')
         self.data_lst = []
 
     def process_msgs(self, num_msgs=-1):
