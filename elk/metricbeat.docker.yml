@@ -1,0 +1,15 @@
+metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+metricbeat.modules:
+  - module: kafka
+    metricsets: ["consumergroup", "partition"]
+    period: 10s
+    hosts: ["3.89.137.77:32769"]
+    enabled: true
+
+processors:
+- add_cloud_metadata: ~
+- add_docker_metadata: ~
+
