@@ -306,4 +306,4 @@ if __name__ == '__main__':
     if DASHBOARD_DEBUG:
         app.run_server(debug=DASHBOARD_DEBUG)
     else:
-        app.run_server(hots='0.0.0.0')
+        app.run_server(host='0.0.0.0')
