@@ -17,14 +17,23 @@ from utils.kafka_conn import connect_kafka_consumer
 
 
 class TrainGTFS():
-    def __init__(self, topic='train_positions'):
-        topic = 'train_gtfs'
-        self.consumer = connect_kafka_consumer(topic)
+    def __init__(self, topic='train_gtfs'):
+        self.topic = topic
+        self.consumer, self.partition = connect_kafka_consumer(topic)
+        self.offset = 0
         try:
             self.stop_times = pd.read_csv('../static/stop_times.txt')
         except:
             self.stop_times = pd.read_csv('static/stop_times.txt')
         self.data_lst = []
+
+    def seek_to_n_last(self, n=0):
+        self.consumer.seek_to_end(self.partition)
+        end_pos = self.consumer.position(self.partition)
+        new_pos = max(end_pos - n - 1, 0)
+        self.offset = new_pos
+        self.consumer.seek(self.partition, new_pos)
+
 
     def process_msgs(self, num_msgs=-1):
         for ix, msg in enumerate(self.consumer):
@@ -66,14 +75,16 @@ class TrainGTFS():
                                                                                         time.time()) + datetime.timedelta(
                                 hours=5)
 
+                    # TODO: Does this break anything?
+                    c = c[c['ExpectedArrival'] != 0]
                     c['delta'] = c['vehicle.timestamp'] - pd.to_datetime(c['ExpectedArrival'])
                     c.delta = c.delta.dt.total_seconds()
 
                     c2 = b.join(c.set_index('index')[['ExpectedArrival', 'delta']])
-                    # TODO: Should we still concat these in the stream?
-                    # data = pd.concat([data, c2])
                     self.data_lst.append(c2)
 
+            self.consumer.seek(self.partition, self.offset + 1)
+            self.offset += 1
             if ix > num_msgs and ix > 0:
                 break
 

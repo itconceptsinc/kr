@@ -1,0 +1,10 @@
+- module: kafka
+  log:
+    enabled: true
+    #var.kafka_home:
+    var.paths:
+      - "/opt/kafka/logs/server.log"
+      - "/opt/kafka/logs/controller.log*"
+      - "/opt/kafka/logs/server.log*"
+      - "/opt/kafka/logs/state-change.log*"
+      - "/opt/kafka/logs/kafka-*.log*"

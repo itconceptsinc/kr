@@ -27,7 +27,20 @@ marker_type = {1: 'triangle-right', 2: 'triangle-left'}
 train_pos_rrcf = TrainPosRRCF()
 train_gtfs = TrainGTFS()
 
-if DEBUG:
+if DASHBOARD_DEBUG:
+    update_interval = 60 * 1000
+
+    train_pos_rrcf.seek_to_n_last(250)
+    train_gtfs.seek_to_n_last(20)
+    train_pos_rrcf.process_msgs(231)
+    train_gtfs.process_msgs(1)
+
+
+else:
+    update_interval = 60 * 1000
+
+    train_pos_rrcf.seek_to_n_last(250)
+    train_gtfs.seek_to_n_last(10)
     train_pos_rrcf.process_msgs(250)
     train_gtfs.process_msgs(10)
 
@@ -71,7 +84,7 @@ app.layout = html.Div([
                                       ),
                  dcc.Interval(
                      id='graph-update',
-                     interval=60 * 100,
+                     interval=update_interval,
                      n_intervals=0
                  ),
              ]),
@@ -95,7 +108,7 @@ app.layout = html.Div([
                                       ),
                  dcc.Interval(
                      id='gtfs-update',
-                     interval=60 * 1000,
+                     interval=update_interval,
                      n_intervals=0
                  ),
              ]),
@@ -107,7 +120,7 @@ app.layout = html.Div([
                  dcc.Graph(id='count-vs-time', animate=True),
                  dcc.Interval(
                      id='count-vs-time-update',
-                     interval=60 * 100,
+                     interval=update_interval,
                      n_intervals=0
                  ),
              ]),
@@ -119,7 +132,7 @@ app.layout = html.Div([
                  dcc.Graph(id='timedif-vs-time', animate=True),
                  dcc.Interval(
                      id='timedif-vs-time-update',
-                     interval=60 * 100,
+                     interval=update_interval,
                      n_intervals=0
                  ),
              ]),
@@ -133,7 +146,7 @@ app.layout = html.Div([
                      animate=True),
                  dcc.Interval(
                      id='timedif-dist-update',
-                     interval=60 * 100,
+                     interval=update_interval,
                      n_intervals=0
                  ),
              ])
@@ -163,7 +176,7 @@ def update_gtfs_table(n_interval):
 def update_gtfs_table(n_interval):
     line = 'BLUE'
     direction = 1
-    dfs = train_gtfs.get_past_data(20)
+    dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
 
     data['vehicle.timestamp'] = pd.to_datetime(data['vehicle.timestamp'], unit='s')
@@ -212,7 +225,7 @@ def update_gtfs_table(n_interval):
 def update_gtfs_table(n_interval):
     line = 'BLUE'
     direction = 1
-    dfs = train_gtfs.get_past_data(20)
+    dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
 
     data['vehicle.timestamp'] = pd.to_datetime(data['vehicle.timestamp'], unit='s')
@@ -265,7 +278,7 @@ def update_gtfs_table(n_interval):
 def update_gtfs_table(n_interval):
     line = 'BLUE'
     direction = 1
-    dfs = train_gtfs.get_past_data(20)
+    dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
 
     d = data[
