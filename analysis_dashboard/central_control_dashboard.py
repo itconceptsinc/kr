@@ -1,8 +1,6 @@
 import sys, os
 
-import pandas as pd
 import dash, dash_table
-import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
 
@@ -15,34 +13,15 @@ try:
 except:
     pass
 
-from config import DEBUG, DASHBOARD_DEBUG
-from utils.wmata_static import get_circuit_ids
-from stream_analysis.train_pos_consumer import TrainPosRRCF
-from stream_analysis.train_gtfs_consumer import TrainGTFS
-
-circuits = get_circuit_ids()
-stream_length = 20
-line_colors = {'BLUE': 'blue', 'GR': 'green', 'OR': 'orange', 'RD': 'red', 'SV': 'grey', 'YL': 'yellow'}
-marker_type = {1: 'triangle-right', 2: 'triangle-left'}
-train_pos_rrcf = TrainPosRRCF()
-train_gtfs = TrainGTFS()
+from config import DASHBOARD_DEBUG
+from analysis_dashboard.analysis_callbacks import update_circuit_anomalies_table_callback,\
+    update_gtfs_table_callback, update_gtfs_time_hist_callback, update_gtfs_time_diff_callback,\
+    update_gtfs_hist_callback, update_gtfs_preds_callback
 
 if DASHBOARD_DEBUG:
     update_interval = 60 * 1000
-
-    train_pos_rrcf.seek_to_n_last(250)
-    train_gtfs.seek_to_n_last(20)
-    train_pos_rrcf.process_msgs(231)
-    train_gtfs.process_msgs(1)
-
-
 else:
     update_interval = 60 * 1000
-
-    train_pos_rrcf.seek_to_n_last(250)
-    train_gtfs.seek_to_n_last(10)
-    train_pos_rrcf.process_msgs(250)
-    train_gtfs.process_msgs(10)
 
 columns = ['cars', 'direction', 'circuit', 'seconds_at_loc', 'anomaly_score']
 tbl_cols = [{"name": i, "id": i} for i in columns]
@@ -84,6 +63,19 @@ app.layout = html.Div([
                                       ),
                  dcc.Interval(
                      id='graph-update',
+                     interval=update_interval,
+                     n_intervals=0
+                 ),
+             ]),
+
+    # Preds Table
+    html.Div(id='table-wrapper-pred',
+             style={'width': 'auto', 'max-width': '90vw', 'margin': '0 auto 50px'},
+             children=[
+                 html.P(id='gtfs-preds',
+                        children=['init']),
+                 dcc.Interval(
+                     id='gtfs-preds-update',
                      interval=update_interval,
                      n_intervals=0
                  ),
@@ -152,167 +144,42 @@ app.layout = html.Div([
              ])
     ])
 
+
 @app.callback(Output('circuit_anomaly_table', 'data'),
               [Input('graph-update', 'n_intervals')])
 def update_circuit_anomalies_table(n_interval):
-    train_pos_rrcf.process_msgs(1)
-    scores = train_pos_rrcf.get_flattened_last_scores()
+    return update_circuit_anomalies_table_callback()
 
-    return scores
+
+@app.callback(Output('gtfs-preds', 'children'),
+              [Input('gtfs-preds-update', 'n_intervals')])
+def update_gtfs_preds(n_interval):
+    return update_gtfs_preds_callback()
+
 
 @app.callback([Output('gtfs-table', 'data'),
                Output('gtfs-table', 'columns')],
               [Input('gtfs-update', 'n_intervals')])
 def update_gtfs_table(n_interval):
-    train_gtfs.process_msgs(1)
-    df = train_gtfs.get_past_data()[0]
-    cols = [{'name': col, 'id': col} for col in df.columns]
-    data = df.to_dict('rows')
-    return data, cols
+    return update_gtfs_table_callback()
 
 
 @app.callback(Output('count-vs-time', 'figure'),
               [Input('count-vs-time-update', 'n_intervals')])
 def update_gtfs_table(n_interval):
-    line = 'BLUE'
-    direction = 1
-    dfs = train_gtfs.get_past_data(stream_length)
-    data = pd.concat(dfs)
-
-    data['vehicle.timestamp'] = pd.to_datetime(data['vehicle.timestamp'], unit='s')
-    min_dt = min(data['vehicle.timestamp'])
-    max_dt = max(data['vehicle.timestamp'])
-
-    d = data[
-        (data['vehicle.trip.routeId'].str.contains(line)) & (data['vehicle.trip.directionId'] == direction)].groupby(
-        'vehicle.timestamp').count()
-    x = d.index
-    y = d.id
-
-    max_count = max(y)+1
-
-    fig_data = []
-    fig_data.append(go.Scatter(
-        x=x,
-        y=y,
-        name=line,
-        mode='lines+markers',
-        marker=dict(
-            color=line_colors[line],
-            symbol=marker_type[direction],
-            size=15
-        )
-    ))
-
-    fig_layout = go.Layout(
-        title='Train Count over Time',
-        xaxis=dict(
-            range=[min_dt, max_dt],
-            title='Date/Time (UTC)'
-        ),
-        yaxis=dict(
-            range=[0, max_count],
-            title='Number of Trains'
-        )
-
-    )
-
-    return {'data': fig_data, 'layout': fig_layout}
+    return update_gtfs_time_hist_callback()
 
 
 @app.callback(Output('timedif-vs-time', 'figure'),
               [Input('timedif-vs-time-update', 'n_intervals')])
 def update_gtfs_table(n_interval):
-    line = 'BLUE'
-    direction = 1
-    dfs = train_gtfs.get_past_data(stream_length)
-    data = pd.concat(dfs)
-
-    data['vehicle.timestamp'] = pd.to_datetime(data['vehicle.timestamp'], unit='s')
-    min_dt = min(data['vehicle.timestamp'])
-    max_dt = max(data['vehicle.timestamp'])
-
-
-    d = data[(data['vehicle.trip.routeId'].str.contains(line)) &
-             (data['vehicle.trip.directionId'] == direction) &
-             (~data.delta.isnull())
-    ]
-
-    x = d['vehicle.timestamp']
-    y = d.delta / 60
-
-    max_diff = max(y) + 1
-    min_diff = min(y) - 1
-
-    fig_data = []
-    fig_data.append(go.Scatter(
-        x=x,
-        y=y,
-        name=line,
-        mode='markers',
-        marker=dict(
-            color=line_colors[line],
-            symbol=marker_type[direction],
-            size=15
-        )
-    ))
-
-    fig_layout = go.Layout(
-        title='Time of Arrival Difference (Actual - Expected) over Time',
-        xaxis=dict(
-            range=[min_dt, max_dt],
-            title='Date/Time (UTC)'
-        ),
-        yaxis=dict(
-            range=[min_diff, max_diff],
-            title='Time Difference (s)'
-        )
-
-    )
-
-    return {'data': fig_data, 'layout': fig_layout}
+    return update_gtfs_time_diff_callback()
 
 
 @app.callback(Output('timedif-dist', 'figure'),
               [Input('timedif-dist-update', 'n_intervals')])
 def update_gtfs_table(n_interval):
-    line = 'BLUE'
-    direction = 1
-    dfs = train_gtfs.get_past_data(stream_length)
-    data = pd.concat(dfs)
-
-    d = data[
-        (data['vehicle.trip.routeId'].str.contains(line)) &
-        (data['vehicle.trip.directionId'] == direction) &
-        (~data.delta.isnull())
-    ]
-    x = d.delta
-
-    max_val = max(x) + 1
-    min_val = min(x) - 1
-
-    fig_data = []
-    fig_data.append(go.Histogram(
-        x=x,
-        marker_color=line_colors[line],
-        # title_text='Time of Arrival Difference (Actual - Expected)',
-        # xaxis_title_text='Time Difference (s)',
-        # yaxis_title_text='Count'
-    ))
-
-    fig_layout = go.Layout(
-        title='Time of Arrival Difference (Actual - Expected)',
-        xaxis=dict(
-            range=[min_val, max_val],
-            title='Time Difference (s)'
-        ),
-        yaxis=dict(
-            title='Count'
-        )
-
-    )
-
-    return {'data': fig_data, 'layout': fig_layout}
+    return update_gtfs_hist_callback()
 
 
 if __name__ == '__main__':
