@@ -12,7 +12,7 @@ try:
 except NameError:
     pass
 
-from config import DEBUG, KAFKA
+from config import PRODUCER_DEBUG, KAFKA
 from stream_analysis.generic_producer import CustomProducer
 
 t1 = Timeloop()
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     producers = [train_position_producer, train_gtfs_producer]
 
-    if DEBUG:
+    if PRODUCER_DEBUG:
         train_gtfs_producer.produce(10)
         train_position_producer.produce(250)
         # [x.produce(250) for x in producers]
