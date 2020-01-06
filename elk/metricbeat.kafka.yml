@@ -1,0 +1,6 @@
+metricbeat.modules:
+- module: kafka
+  metricsets: ["consumergroup", "partition"]
+  period: 10s
+  hosts: ["3.89.137.77:32769"]
+  enabled: true
