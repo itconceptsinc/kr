@@ -15,8 +15,8 @@ from utils.kafka_conn import connect_kafka_consumer
 
 class TrainPosRRCF():
     def __init__(self, topic='train_positions'):
-        topic = 'train_positions'
-        self.consumer = connect_kafka_consumer(topic)
+        self.topic = topic
+        self.consumer, self.partition = connect_kafka_consumer(topic)
 
         self.forests = {}
         circuits = get_circuit_ids()
@@ -32,6 +32,13 @@ class TrainPosRRCF():
             data.get('seconds_at_location', -1)
         ])
         return point
+
+    def seek_to_n_last(self, n=0):
+        self.consumer.seek_to_end(self.partition)
+        end_pos = self.consumer.position(self.partition)
+        new_pos = max(end_pos - n - 1, 0)
+        self.offset = new_pos
+        self.consumer.seek(self.partition, new_pos)
 
     def process_msgs(self, num_msgs=-1):
         for ix, msg in enumerate(self.consumer):
@@ -57,6 +64,8 @@ class TrainPosRRCF():
             #     }
             #     self.forests[circuit_id].anomaly_detection(empty_data)
 
+            self.consumer.seek(self.partition, self.offset + 1)
+            self.offset += 1
             if ix > num_msgs and ix != -1:
                 break
 
