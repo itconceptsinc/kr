@@ -303,4 +303,7 @@ def update_gtfs_table(n_interval):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=DASHBOARD_DEBUG)
+    if DASHBOARD_DEBUG:
+        app.run_server(debug=DASHBOARD_DEBUG)
+    else:
+        app.run_server(hots='0.0.0.0')
