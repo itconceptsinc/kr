@@ -15,7 +15,7 @@ try:
 except:
     pass
 
-from config import DEBUG
+from config import DEBUG, DASHBOARD_DEBUG
 from utils.wmata_static import get_circuit_ids
 from stream_analysis.train_pos_consumer import TrainPosRRCF
 from stream_analysis.train_gtfs_consumer import TrainGTFS
@@ -28,8 +28,8 @@ train_pos_rrcf = TrainPosRRCF()
 train_gtfs = TrainGTFS()
 
 if DEBUG:
-    train_pos_rrcf.process_msgs(100)
-    train_gtfs.process_msgs(1)
+    train_pos_rrcf.process_msgs(250)
+    train_gtfs.process_msgs(10)
 
 columns = ['cars', 'direction', 'circuit', 'seconds_at_loc', 'anomaly_score']
 tbl_cols = [{"name": i, "id": i} for i in columns]
@@ -303,4 +303,4 @@ def update_gtfs_table(n_interval):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=DASHBOARD_DEBUG)

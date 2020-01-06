@@ -1,5 +1,7 @@
 import sys, json, time, os
 
+from timeloop import Timeloop
+from datetime import timedelta
 from google.protobuf import json_format
 from google.transit import gtfs_realtime_pb2
 
@@ -12,6 +14,9 @@ except NameError:
 
 from config import DEBUG, KAFKA
 from stream_analysis.generic_producer import CustomProducer
+
+t1 = Timeloop()
+TIME_TO_WAIT = 5 * 60
 
 def train_pos_func(data):
     msg = []
@@ -27,6 +32,7 @@ def train_pos_func(data):
         msg.append(pos_data)
     return msg
 
+
 def train_gtfs_func(data):
     feed = gtfs_realtime_pb2.FeedMessage()
     feed.ParseFromString(data)
@@ -34,8 +40,12 @@ def train_gtfs_func(data):
     return decoded_data
 
 
+@t1.job(interval=timedelta(seconds=TIME_TO_WAIT))
+def produce():
+    [x.produce(1) for x in producers]
+
+
 if __name__ == "__main__":
-    TIME_TO_WAIT = 5 * 60
     train_position_producer = CustomProducer(
         'train_positions',
         KAFKA['start_utc'],
@@ -53,10 +63,8 @@ if __name__ == "__main__":
     producers = [train_position_producer, train_gtfs_producer]
 
     if DEBUG:
-        train_gtfs_producer.produce(2)
-        [x.produce(250) for x in producers]
-        sys.exit()
+        train_gtfs_producer.produce(10)
+        train_position_producer.produce(250)
+        # [x.produce(250) for x in producers]
 
-    while True:
-        [x.produce(1) for x in producers]
-        time.sleep(TIME_TO_WAIT)
+    t1.start(block=True)

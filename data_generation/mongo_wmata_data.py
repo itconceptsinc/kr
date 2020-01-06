@@ -1,4 +1,4 @@
-import sys, requests, json, time, os
+import sys, requests, time, os
 
 try:
     fileDir = os.path.dirname(os.path.abspath(__file__))
