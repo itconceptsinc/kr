@@ -1,7 +1,6 @@
-import sys, requests, json, time, os
+import sys, json, time, os
 
 from google.protobuf import json_format
-from pandas.io.json import json_normalize
 from google.transit import gtfs_realtime_pb2
 
 try:
@@ -11,7 +10,7 @@ try:
 except NameError:
     pass
 
-from config import DEBUG
+from config import DEBUG, KAFKA
 from stream_analysis.generic_producer import CustomProducer
 
 def train_pos_func(data):
@@ -39,14 +38,14 @@ if __name__ == "__main__":
     TIME_TO_WAIT = 5 * 60
     train_position_producer = CustomProducer(
         'train_positions',
-        1578035626,
+        KAFKA['start_utc'],
         train_pos_func,
         'train_positions'
     )
 
     train_gtfs_producer = CustomProducer(
         'train_gtfs',
-        1578166880,
+        KAFKA['start_utc'],
         train_gtfs_func,
         'train_positions_gtfs'
     )
