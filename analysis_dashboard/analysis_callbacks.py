@@ -19,14 +19,14 @@ from stream_analysis.train_gtfs_consumer import TrainGTFS
 
 circuits = get_circuit_ids()
 stream_length = 20
-line_colors = {'BLUE': 'blue', 'GR': 'green', 'OR': 'orange', 'RD': 'red', 'SV': 'grey', 'YL': 'yellow'}
+line_colors = {'BLUE': 'blue', 'GREEN': 'green', 'ORANGE': 'orange', 'RED': 'red', 'SILVER': 'grey', 'YELLOW': 'yellow'}
 marker_type = {1: 'triangle-right', 2: 'triangle-left'}
 train_pos_rrcf = TrainPosRRCF()
 train_gtfs = TrainGTFS()
 
 if DASHBOARD_DEBUG:
-    train_pos_rrcf.seek_to_n_last(10)
-    train_gtfs.seek_to_n_last(20)
+    train_pos_rrcf.seek_to_n_last(80)
+    train_gtfs.seek_to_n_last(80)
     train_pos_rrcf.process_msgs(13)
     train_gtfs.process_msgs(5)
 
@@ -195,8 +195,11 @@ def update_gtfs_time_diff_callback(linecolor):
     x = d['vehicle.timestamp']
     y = d.delta / 60
 
-    max_diff = max(y) + 1
-    min_diff = min(y) - 1
+    if len(y) > 0:
+        max_diff = max(y) + 1
+        min_diff = min(y) - 1
+    else:
+        max_diff = min_diff = 0
 
     fig_data = []
     fig_data.append(go.Scatter(
@@ -241,8 +244,11 @@ def update_gtfs_hist_callback(linecolor):
     ]
     x = d.delta
 
-    max_val = max(x) + 1
-    min_val = min(x) - 1
+    if len(x) > 0:
+        max_val = max(x) + 1
+        min_val = min(x) - 1
+    else:
+        min_val = max_val = 0
 
     fig_data = []
     fig_data.append(go.Histogram(

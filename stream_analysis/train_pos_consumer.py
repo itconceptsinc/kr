@@ -12,6 +12,8 @@ from utils.wmata_static import get_circuit_ids
 from stream_analysis.rrcf_consumer import RRCFConsumer
 from utils.kafka_conn import connect_kafka_consumer
 
+from config import DEBUG
+
 
 class TrainPosRRCF():
     def __init__(self, topic='train_positions'):
@@ -74,7 +76,9 @@ class TrainPosRRCF():
         for circuit_id in self.circuit_ids:
             ix = self.forests[circuit_id].ix
             # TODO: Investigate if this makes sense
-            if ix > 100:
+            if DEBUG:
+                scores[circuit_id] = self.forests[circuit_id].metrics[ix - 1]
+            elif ix > 100:
                 scores[circuit_id] = self.forests[circuit_id].metrics[ix-1]
 
         return scores

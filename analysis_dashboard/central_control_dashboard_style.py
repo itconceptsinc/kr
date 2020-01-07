@@ -72,9 +72,10 @@ app.layout = html.Div(
                                         dcc.Dropdown(
                                             id="line-dropdown",
                                             options=[
-                                                {"label": line_colors[i], "value": i}
+                                                {"label": i, "value": i}
                                                 for i in line_colors
                                             ],
+                                            value='BLUE',
                                             placeholder="Select a line",
                                         )
                                     ],
@@ -130,7 +131,7 @@ app.layout = html.Div(
                                                                   selected_rows=[],
                                                                   page_action="native",
                                                                   page_current=0,
-                                                                  page_size=15,
+                                                                  page_size=10,
                                                                   style_data_conditional=styles
                                                                   ),
                                              dcc.Interval(
@@ -161,7 +162,7 @@ app.layout = html.Div(
                                                               # row_deletable=True,
                                                               page_action="native",
                                                               page_current=0,
-                                                              page_size=15,
+                                                              page_size=10,
                                                               ),
                                          dcc.Interval(
                                              id='gtfs-update',
