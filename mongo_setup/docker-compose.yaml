@@ -1,0 +1,12 @@
+version '3'
+services:
+  mongo:
+    image: "mongo:latest"
+    ports:
+      - "27017:27017"
+    enviornment:
+      MONGO_INITDB_ROOT_USERNAME:""
+      MONGO_INITDB_ROOT_PASSWORD=ks_password
+  mongo_ingestion:
+    volumes:
+      .:/code
