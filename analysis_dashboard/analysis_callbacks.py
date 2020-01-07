@@ -25,9 +25,9 @@ train_pos_rrcf = TrainPosRRCF()
 train_gtfs = TrainGTFS()
 
 if DASHBOARD_DEBUG:
-    train_pos_rrcf.seek_to_n_last(150)
+    train_pos_rrcf.seek_to_n_last(10)
     train_gtfs.seek_to_n_last(20)
-    train_pos_rrcf.process_msgs(135)
+    train_pos_rrcf.process_msgs(13)
     train_gtfs.process_msgs(5)
 
 else:
@@ -128,8 +128,9 @@ def update_gtfs_table_callback():
     return data, cols
 
 
-def update_gtfs_time_hist_callback():
-    line = 'BLUE'
+def update_gtfs_time_hist_callback(linecolor):
+    line = linecolor #'BLUE'
+    print(line)
     direction = 1
     dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
@@ -175,8 +176,8 @@ def update_gtfs_time_hist_callback():
     return {'data': fig_data, 'layout': fig_layout}
 
 
-def update_gtfs_time_diff_callback():
-    line = 'BLUE'
+def update_gtfs_time_diff_callback(linecolor):
+    line = linecolor #'BLUE'
     direction = 1
     dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
@@ -226,8 +227,9 @@ def update_gtfs_time_diff_callback():
     return {'data': fig_data, 'layout': fig_layout}
 
 
-def update_gtfs_hist_callback():
-    line = 'BLUE'
+def update_gtfs_hist_callback(linecolor):
+    line = linecolor.upper() #'BLUE'
+    print(line)
     direction = 1
     dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
