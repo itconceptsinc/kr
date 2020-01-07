@@ -1,2 +1,2 @@
-conda env create -f conda.yaml
+conda env create -f env.yaml
 conda activate kessel_run

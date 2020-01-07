@@ -63,8 +63,8 @@ if __name__ == "__main__":
     producers = [train_position_producer, train_gtfs_producer]
 
     # TODO: Should this be run by default or in debug?
-    train_gtfs_producer.produce(10)
-    train_position_producer.produce(250)
+    train_gtfs_producer.produce(produce_all=True)
+    train_position_producer.produce(produce_all=True)
     # [x.produce(250) for x in producers]
 
     t1.start(block=True)

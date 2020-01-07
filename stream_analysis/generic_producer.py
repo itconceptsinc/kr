@@ -51,13 +51,18 @@ class CustomProducer():
         except Exception as ex:
             print('Exception in publishing message')
 
-    def produce(self, itr=1):
-        for _ in range(itr):
+    def produce(self, itr=1, produce_all=False):
+        ix = 0
+        while ix < itr or produce_all:
             doc = self.get_record()
             self.advance_stream(doc)
             if doc and doc.get('data'):
                 msg = self.process_data(doc['data'])
                 self.publish_msg(msg)
+            else:
+                break
+
+            ix += 1
 
 
 if __name__ == "__main__":

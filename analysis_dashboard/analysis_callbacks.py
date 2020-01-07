@@ -27,7 +27,7 @@ train_gtfs = TrainGTFS()
 if DASHBOARD_DEBUG:
     train_pos_rrcf.seek_to_n_last(80)
     train_gtfs.seek_to_n_last(80)
-    train_pos_rrcf.process_msgs(13)
+    train_pos_rrcf.process_msgs(80)
     train_gtfs.process_msgs(5)
 
 else:
@@ -107,18 +107,24 @@ def update_gtfs_preds_callback():
             hours=timemargin)) & (data['vehicle.trip.directionId'].astype('float') == posstrip.direction_id.values[
         0]) & (~data.delta.isnull()) & (~(data.delta > 10000))]
 
-    delta_time = delta_time_data.delta.quantile(0.95)
+    delta_time_max = delta_time_data.delta.quantile(0.95)
+    delta_time_min = delta_time_data.delta.quantile(0.05)
 
     if int(poss_st2.iloc[0].arrival_time[0:2]) <= 3:
         tmpval = str(int(poss_st2.iloc[0].arrival_time[0:2]) - 24) + poss_st2.iloc[0].arrival_time[2:]
-        Arrival_Prediction = (
-                    pd.to_datetime(tmpval, format='%H:%M:%S') + timedelta(seconds=delta_time)).strftime(
+        Arrival_Prediction_max = (
+                    pd.to_datetime(tmpval, format='%H:%M:%S') + timedelta(seconds=delta_time_max)).strftime(
+            '%H:%M')
+        Arrival_Prediction_min = (
+                    pd.to_datetime(tmpval, format='%H:%M:%S') + timedelta(seconds=delta_time_min)).strftime(
             '%H:%M')
     else:
-        Arrival_Prediction = (pd.to_datetime(poss_st2.iloc[0].arrival_time, format='%H:%M:%S') + timedelta(
-            seconds=delta_time)).strftime('%H:%M')
+        Arrival_Prediction_max = (pd.to_datetime(poss_st2.iloc[0].arrival_time, format='%H:%M:%S') + timedelta(
+            seconds=delta_time_max)).strftime('%H:%M')
+        Arrival_Prediction_min = (pd.to_datetime(poss_st2.iloc[0].arrival_time, format='%H:%M:%S') + timedelta(
+            seconds=delta_time_min)).strftime('%H:%M')
 
-    return f'Next arrival at {stop} going to {headsign} predicted at {Arrival_Prediction}'
+    return f'Next arrival at {stop} going to {headsign} predicted between {Arrival_Prediction_min}-{Arrival_Prediction_max}'
 
 def update_gtfs_table_callback():
     train_gtfs.process_msgs(1)
