@@ -12,7 +12,8 @@ except:
     pass
 
 from config import DASHBOARD_DEBUG
-from utils.wmata_static import get_circuit_ids
+from utils.wmata_static import get_circuit_ids, get_line_codes, get_lines, get_line_paths
+
 from stream_analysis.train_pos_consumer import TrainPosRRCF
 from stream_analysis.train_gtfs_consumer import TrainGTFS
 
@@ -50,6 +51,29 @@ trips['service_id'] = trips.service_id.astype('int')
 stops = pd.read_csv(f'{static_dir}stops.txt')
 cals = pd.read_csv(f'{static_dir}calendar_dates.txt')
 
+def heading():
+    headings = []
+    lines = get_lines()
+    line_paths = get_line_paths()
+    for x in range(len(lines)):
+        color = lines[x]['DisplayName']
+        #print(color)
+        #print(line_paths[color][0]['StationName'])
+        #print(line_paths[color][-1]['StationName'])
+        headings.append(str(color + ' - ' + line_paths[color][0]['StationName']))
+        headings.append(str(color + ' - ' + line_paths[color][-1]['StationName']))
+    return headings
+
+def stops():
+    linestop = []
+    lines = get_lines()
+    line_paths = get_line_paths()
+    stops = [] 
+    for x in range(len(lines)):
+        color = lines[x]['DisplayName']
+        for y in range(len(line_paths[color])):
+            linestop.append(str(color + ' - ' + line_paths[color][y]['StationName']))
+    return linestop
 
 def update_circuit_anomalies_table_callback():
     train_pos_rrcf.process_msgs(1)
@@ -58,7 +82,13 @@ def update_circuit_anomalies_table_callback():
     return scores
 
 
-def update_gtfs_preds_callback():
+def update_gtfs_preds_callback(heading,stop):
+
+    head = heading.split(" - ")
+    stop = stop.split(" - ")
+    print(head)
+    print(stop)
+
     """
     #This should be changed to whatever time we think is reasonable to restrict
     the data pull to (ie how far in time from now do we consider the realtime
@@ -67,9 +97,14 @@ def update_gtfs_preds_callback():
     timemargin = 24  # in hours
 
     # User input -- dropdowns would be helpful and I can get you the names in the morning
-    line = 'SILVER'
-    stop = 'METRO CENTER METRO STATION'
-    headsign = 'WIEHLE RESTON EAST'
+    if(head[0] == stop[0]):
+        line = head[0].upper()
+        stop = stop[1].upper()
+        headsign = head[1].upper()
+    else:
+        line = 'SILVER'
+        stop = 'METRO CENTER METRO STATION'
+        headsign = 'WIEHLE RESTON EAST'
 
     data = train_gtfs.get_past_data()[0]
     current_dt = datetime.fromtimestamp(int(data['vehicle.timestamp'].max()))
@@ -236,7 +271,7 @@ def update_gtfs_time_diff_callback(linecolor):
 
 
 def update_gtfs_hist_callback(linecolor):
-    line = linecolor.upper() #'BLUE'
+    line = linecolor #'BLUE'
     direction = 1
     dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
