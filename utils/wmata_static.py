@@ -38,7 +38,7 @@ def get_line_paths():
         req = sesh.get(path_url, headers=headers)
         path = req.json().get('Path', [])
 
-        paths[line] = path
+        paths[line.get('DisplayName')] = path
 
     return paths
 
@@ -50,8 +50,8 @@ def get_station_codes():
     norm_stations = []
     for station in stations:
         norm_stations.append({
-            station['Code'],
-            station['name'],
+            'StationCode': station['Code'],
+            'StationName': station['Name'],
         })
     return norm_stations
 
