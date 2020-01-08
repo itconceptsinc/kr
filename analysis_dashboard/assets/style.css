@@ -257,3 +257,7 @@ a {
 .Select, .Select div, .Select input, .Select span {
     background-color: grey;
 }
+
+td, tr, th {
+    color: black
+}

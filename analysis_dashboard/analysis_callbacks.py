@@ -136,7 +136,6 @@ def update_gtfs_table_callback():
 
 def update_gtfs_time_hist_callback(linecolor):
     line = linecolor #'BLUE'
-    print(line)
     direction = 1
     dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)
@@ -238,7 +237,6 @@ def update_gtfs_time_diff_callback(linecolor):
 
 def update_gtfs_hist_callback(linecolor):
     line = linecolor.upper() #'BLUE'
-    print(line)
     direction = 1
     dfs = train_gtfs.get_past_data(stream_length)
     data = pd.concat(dfs)

@@ -26,13 +26,15 @@ else:
 columns = ['cars', 'direction', 'circuit', 'seconds_at_loc', 'anomaly_score']
 tbl_cols = [{"name": i, "id": i} for i in columns]
 
-styles = [{
-    'if': {
-        'column_id': 'anomaly_score',
-        'filter_query': '{anomaly_score} > 50'
-    },
-    'color': 'red',
-}]
+styles = [
+    {
+        'if': {
+            'column_id': 'anomaly_score',
+            'filter_query': '{anomaly_score} > 50'
+        },
+        'color': 'red',
+    }
+]
 
 
 app = dash.Dash(__name__)
